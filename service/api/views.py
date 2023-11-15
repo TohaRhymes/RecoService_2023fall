@@ -9,8 +9,6 @@ from service.api.exceptions import UserNotFoundError
 from service.api.security import get_current_user
 from service.log import app_logger
 
-from fastapi.responses import JSONResponse
-
 
 class RecoResponse(BaseModel):
     user_id: int
