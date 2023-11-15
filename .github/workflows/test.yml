@@ -3,13 +3,14 @@ on:
   push:
     branches:
       - master
+      - lab1_basics
   pull_request:
     types: [opened, synchronize]
 
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
 
     steps:
       - name: Checkout
@@ -32,11 +33,11 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-  
+
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install 
-      
+        run: poetry install
+
       - name: Run tests
         run: make lint
 
