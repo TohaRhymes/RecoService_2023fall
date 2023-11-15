@@ -41,7 +41,7 @@ def test_get_reco_without_token(
     path = GET_RECO_PATH.format(model_name="random", user_id=user_id)
     with client:
         response = client.get(path)
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 # Invalid user ID

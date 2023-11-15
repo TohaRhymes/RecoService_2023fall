@@ -51,6 +51,9 @@ def create_response(
     if errors is not None:
         content["errors"] = errors
 
+    if errors is not None:
+        content["status_code"] = status_code
+
     return DataclassJSONResponse(content, status_code=status_code)
 
 

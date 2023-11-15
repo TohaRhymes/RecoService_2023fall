@@ -58,16 +58,51 @@ async def health() -> str:
                 }
             },
         },
-        404: {
-            "description": "Model not found",
+        401: {
+            "description": "Model or user not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Model doesn't exist"}
+                    "example": {"errors": [{"error_key": "http_exception",
+                                            "error_message": "Invalid "
+                                                             "authentication "
+                                                             "credentials",
+                                            "error_loc": "null"}],
+                                "status_code": 401}
                 }
             },
         },
-        422: {
-            "description": "Validation Error",
+        403: {
+            "description": "Bearer token is not provided",
+            "content": {
+                "application/json": {
+                    "example": {"errors": [{"error_key": "http_exception",
+                                            "error_message": "Not "
+                                                             "authenticated",
+                                            "error_loc": "null"}],
+                                "status_code": 404}
+                }
+            },
+        },
+        404: {
+            "description": "Model or user not found",
+            "content": {
+                "application/json": {
+                    "example": {"errors": [{"error_key": "user_not_found",
+                                            "error_message": "User "
+                                                             "2392109321 not"
+                                                             " found",
+                                            "error_loc": "null"}],
+                                "status_code": 404}
+                }
+            },
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Internal server error"}
+                }
+            },
         }
     }
 )
