@@ -9,6 +9,8 @@ from service.api.exceptions import UserNotFoundError
 from service.api.security import get_current_user
 from service.log import app_logger
 
+from fastapi.responses import JSONResponse
+
 
 class RecoResponse(BaseModel):
     user_id: int
@@ -21,6 +23,24 @@ router = APIRouter()
 @router.get(
     path="/health",
     tags=["Health"],
+    responses={
+        200: {
+            "description": "Successful Health Check",
+            "content": {
+                "text/plain": {
+                    "example": "36.6"
+                }
+            },
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Internal server error"}
+                }
+            },
+        }
+    }
 )
 async def health() -> str:
     return "36.6"
@@ -30,6 +50,28 @@ async def health() -> str:
     path="/reco/{model_name}/{user_id}",
     tags=["Recommendations"],
     response_model=RecoResponse,
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {"user_id": 1,
+                                "items": [8, 3, 6, 23, 5, 61, 78, 83, 21, 54]}
+                }
+            },
+        },
+        404: {
+            "description": "Model not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Model doesn't exist"}
+                }
+            },
+        },
+        422: {
+            "description": "Validation Error",
+        }
+    }
 )
 async def get_reco(
     request: Request,
