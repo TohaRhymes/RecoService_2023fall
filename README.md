@@ -96,7 +96,7 @@ python main.py
 ### Способ 2: Uvicorn
 
 ```
-uvicorn main:app
+uvicorn main:app  --reload
 ```
 
 Очень похож на предыдущий, только запуск идет напрямую.
