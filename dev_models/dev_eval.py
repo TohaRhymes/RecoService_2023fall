@@ -2,12 +2,11 @@ import os
 import zipfile as zf
 from copy import deepcopy
 from time import time
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 import requests
-from IPython.display import display
 from rectools import Columns
 from rectools.dataset import Dataset, Interactions
 from rectools.metrics import calc_metrics
@@ -135,6 +134,7 @@ def visualize(
     user_list: List[int],
     item_data: List[str],
     K_RECOS: int = 10,
+    display: Callable = print
 ) -> None:
     interactions = dataset[0]
     items = dataset[2]
