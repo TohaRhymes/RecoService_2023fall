@@ -2,6 +2,7 @@ VENV := .venv
 
 PROJECT := service
 TESTS := tests
+DEV_MODELS := dev_models
 
 IMAGE_NAME := reco_service
 CONTAINER_NAME := reco_service
@@ -26,11 +27,11 @@ clean:
 # Format
 
 isort_fix: .venv
-	poetry run isort $(PROJECT) $(TESTS)
+	poetry run isort $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 
 black_fix:
-	poetry run black $(PROJECT) $(TESTS)
+	poetry run black $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 format: isort_fix black_fix
 
@@ -38,19 +39,19 @@ format: isort_fix black_fix
 # Lint
 
 isort: .venv
-	poetry run isort --check $(PROJECT) $(TESTS)
+	poetry run isort --check $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 .black:
-	poetry run black --check --diff $(PROJECT) $(TESTS)
+	poetry run black --check --diff $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 flake: .venv
-	poetry run flake8 $(PROJECT) $(TESTS)
+	poetry run flake8 $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 mypy: .venv
-	poetry run mypy $(PROJECT) $(TESTS)
+	poetry run mypy $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 pylint: .venv
-	poetry run pylint $(PROJECT) $(TESTS)
+	poetry run pylint $(PROJECT) $(TESTS) $(DEV_MODELS)
 
 lint: isort flake mypy pylint
 
