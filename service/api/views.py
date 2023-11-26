@@ -6,7 +6,7 @@ from gunicorn.config import User
 from pydantic import BaseModel
 
 from service.api.exceptions import UserNotFoundError
-from service.api.security import get_current_user
+from service.api.security import verify_token
 from service.log import app_logger
 
 
@@ -24,21 +24,13 @@ router = APIRouter()
     responses={
         200: {
             "description": "Successful Health Check",
-            "content": {
-                "text/plain": {
-                    "example": "36.6"
-                }
-            },
+            "content": {"text/plain": {"example": "36.6"}},
         },
         500: {
             "description": "Internal Server Error",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Internal server error"}
-                }
-            },
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "Internal server error"}}},
+        },
+    },
 )
 async def health() -> str:
     return "36.6"
@@ -51,23 +43,22 @@ async def health() -> str:
     responses={
         200: {
             "description": "Successful Response",
-            "content": {
-                "application/json": {
-                    "example": {"user_id": 1,
-                                "items": [8, 3, 6, 23, 5, 61, 78, 83, 21, 54]}
-                }
-            },
+            "content": {"application/json": {"example": {"user_id": 1, "items": [8, 3, 6, 23, 5, 61, 78, 83, 21, 54]}}},
         },
         401: {
             "description": "Model or user not found",
             "content": {
                 "application/json": {
-                    "example": {"errors": [{"error_key": "http_exception",
-                                            "error_message": "Invalid "
-                                                             "authentication "
-                                                             "credentials",
-                                            "error_loc": "null"}],
-                                "status_code": 401}
+                    "example": {
+                        "errors": [
+                            {
+                                "error_key": "http_exception",
+                                "error_message": "Invalid " "authentication " "credentials",
+                                "error_loc": "null",
+                            }
+                        ],
+                        "status_code": 401,
+                    }
                 }
             },
         },
@@ -75,11 +66,16 @@ async def health() -> str:
             "description": "Bearer token is not provided",
             "content": {
                 "application/json": {
-                    "example": {"errors": [{"error_key": "http_exception",
-                                            "error_message": "Not "
-                                                             "authenticated",
-                                            "error_loc": "null"}],
-                                "status_code": 404}
+                    "example": {
+                        "errors": [
+                            {
+                                "error_key": "http_exception",
+                                "error_message": "Not " "authenticated",
+                                "error_loc": "null",
+                            }
+                        ],
+                        "status_code": 404,
+                    }
                 }
             },
         },
@@ -87,34 +83,31 @@ async def health() -> str:
             "description": "Model or user not found",
             "content": {
                 "application/json": {
-                    "example": {"errors": [{"error_key": "user_not_found",
-                                            "error_message": "User "
-                                                             "2392109321 not"
-                                                             " found",
-                                            "error_loc": "null"}],
-                                "status_code": 404}
+                    "example": {
+                        "errors": [
+                            {
+                                "error_key": "user_not_found",
+                                "error_message": "User " "2392109321 not" " found",
+                                "error_loc": "null",
+                            }
+                        ],
+                        "status_code": 404,
+                    }
                 }
             },
         },
         500: {
             "description": "Internal Server Error",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Internal server error"}
-                }
-            },
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "Internal server error"}}},
+        },
+    },
 )
 async def get_reco(
-    request: Request,
-    model_name: str,
-    user_id: int,
-    current_user: User = Depends(get_current_user)
+    request: Request, model_name: str, user_id: int, current_user: User = Depends(verify_token)
 ) -> RecoResponse:
     app_logger.info(f"Request for model: {model_name}, user_id: {user_id}")
 
-    if user_id > 10 ** 9:
+    if user_id > 10**9:
         raise UserNotFoundError(error_message=f"User {user_id} not found")
 
     k_recs = request.app.state.k_recs
