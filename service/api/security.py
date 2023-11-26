@@ -5,7 +5,7 @@ from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 bearer_scheme = HTTPBearer()
-load_dotenv()
+load_dotenv(".test_env")
 TOKEN = os.getenv("MY_SECRET_TOKEN")
 
 
