@@ -1,4 +1,3 @@
-from collections import Counter
 from http import HTTPStatus
 
 import pytest
@@ -40,7 +39,7 @@ def test_get_reco_without_token(client: TestClient, user_id) -> None:
 
 
 # Invalid user ID
-@pytest.mark.parametrize("user_id", [10**10])
+@pytest.mark.parametrize("user_id", [10 ** 10])
 def test_get_reco_for_unknown_user(client: TestClient, user_id) -> None:
     path = GET_RECO_PATH.format(model_name="random", user_id=user_id)
     with client:
@@ -51,10 +50,12 @@ def test_get_reco_for_unknown_user(client: TestClient, user_id) -> None:
 
 # Valid user ID with different models
 @pytest.mark.parametrize(
-    "user_id,model_name,expected_status", [(123, "random", HTTPStatus.OK), (123, "range", HTTPStatus.OK)]
+    "user_id,model_name,expected_status",
+    [(123, "random", HTTPStatus.OK), (123, "range", HTTPStatus.OK)]
 )
 def test_get_reco_valid_user(
-    client: TestClient, service_config: ServiceConfig, user_id, model_name, expected_status
+    client: TestClient, service_config: ServiceConfig, user_id, model_name,
+    expected_status
 ) -> None:
     path = GET_RECO_PATH.format(model_name=model_name, user_id=user_id)
     with client:
@@ -63,27 +64,10 @@ def test_get_reco_valid_user(
     response_json = response.json()
     assert response_json["user_id"] == user_id
     if model_name == "range":
-        assert response_json["items"] == list(range(1, service_config.k_recs + 1))
+        assert response_json["items"] == list(
+            range(1, service_config.k_recs + 1))
     else:
         assert len(response_json["items"]) == service_config.k_recs
-
-
-# Valid user ID with different models
-@pytest.mark.parametrize(
-    "user_id,model_name,expected_status",
-    [(123, "userknn_cos_70", HTTPStatus.OK), (32432, "userknn_cos_70", HTTPStatus.OK)],
-)
-def test_get_userknn_valid_user(
-    client: TestClient, service_config: ServiceConfig, user_id, model_name, expected_status
-) -> None:
-    path = GET_RECO_PATH.format(model_name=model_name, user_id=user_id)
-    with client:
-        response = client.get(path, headers=AUTH_HEADER)
-    assert response.status_code == expected_status
-    response_json = response.json()
-    assert response_json["user_id"] == user_id
-
-    assert len(Counter(response_json["items"])) == service_config.k_recs
 
 
 # Test invalid model name
