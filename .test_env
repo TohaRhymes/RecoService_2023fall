@@ -1,1 +1,3 @@
 MY_SECRET_TOKEN=let_admin_in_lmao
+USERKNNCOS70_NAME=./models/pickle_data/user_cos_70.pickle
+DATA_DIR=./data
