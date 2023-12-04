@@ -14,7 +14,6 @@ DATA_DIR = os.getenv("DATA_DIR")
 
 class CustomUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
-        print(module, name)
         if module == "userknn":
             return UserKnn
         return super().find_class(module, name)
