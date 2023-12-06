@@ -20,9 +20,7 @@ class LFM(pickle.Unpickler):
         kion_data = read_kion_dataset(fast_check=1, data_dir=DATA_DIR)
         interactions = kion_data["interactions"]
         data_for_predict = Dataset.construct(interactions.df)
-        self.watched = dict(
-            interactions.df[["user_id", "item_id"]].groupby("user_id")[
-                "item_id"].agg(list))
+        self.watched = dict(interactions.df[["user_id", "item_id"]].groupby("user_id")["item_id"].agg(list))
 
         # save max number of films
         max_k = len(kion_data["items"]["item_id"].unique())
@@ -38,10 +36,14 @@ class LFM(pickle.Unpickler):
         # get popular list (all items, but ranked)
         sample_popular_user = data_for_predict.user_id_map.external_ids[0]
         self.popular_list = list(
-            self.loaded_popular.recommend(dataset=data_for_predict,
-                                          users=[sample_popular_user, ],
-                                          k=max_k, filter_viewed=False)[
-                "item_id"]
+            self.loaded_popular.recommend(
+                dataset=data_for_predict,
+                users=[
+                    sample_popular_user,
+                ],
+                k=max_k,
+                filter_viewed=False,
+            )["item_id"]
         )
 
         # == load the real LFM model ===
@@ -58,11 +60,9 @@ class LFM(pickle.Unpickler):
         final_prediction = []
         if user_id in self.watched:
             cur_watched = self.watched[user_id]
-            final_prediction = self.loaded_lfm.get_item_list_for_user(user_id,
-                                                                      top_n=k).tolist()
+            final_prediction = self.loaded_lfm.get_item_list_for_user(user_id, top_n=k).tolist()
             # check watched
-            final_prediction = [film for film in final_prediction if
-                                film not in cur_watched]
+            final_prediction = [film for film in final_prediction if film not in cur_watched]
             # append popular, if not enough
             for item in self.popular_list:
                 if len(final_prediction) >= k:
