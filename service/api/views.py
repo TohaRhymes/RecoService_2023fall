@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from gunicorn.config import User
 from pydantic import BaseModel
 
+from models.UserKnnCos70 import UserKnnCos70
 from service.api.exceptions import UserNotFoundError
 from service.api.security import verify_token
 from service.log import app_logger
@@ -14,6 +15,8 @@ class RecoResponse(BaseModel):
     user_id: int
     items: List[int]
 
+
+userknn_cos_70 = UserKnnCos70()
 
 router = APIRouter()
 
@@ -115,8 +118,11 @@ async def get_reco(
         reco = random.sample(range(1, k_recs * 5), k_recs)
     elif model_name == "range":
         reco = list(range(1, k_recs + 1))
+    elif model_name == "userknn_cos_70":
+        reco = userknn_cos_70.predict(user_id)
     else:
         raise HTTPException(status_code=404, detail="Model doesn't exist")
+
     return RecoResponse(user_id=user_id, items=reco)
 
 

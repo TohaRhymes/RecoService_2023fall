@@ -15,6 +15,8 @@ from rectools.model_selection import Splitter
 from rectools.models.base import ModelBase
 from tqdm.auto import tqdm
 
+from dev_models.userknn import UserKnn
+
 REPORT_PART = [
     """----------------------------------------------------------
 User: {cur_user}
@@ -27,37 +29,43 @@ Recommended films amount: {len_recos}
 Display first {k_display} recommendations:""",
 ]
 DATA_DIR = "../data"
-CMAP = sns.diverging_palette(133, 10, as_cmap=True)
+CMAP = sns.diverging_palette(10, 133, as_cmap=True)
 
 
-def read_kion_dataset() -> Dict[str, Union[Interactions, pd.DataFrame]]:
+def print_verbose(s: str, verbose: int = 0):
+    if verbose > 0:
+        print(s)
+
+
+def read_kion_dataset(fast_check: float = 1, data_dir: str = DATA_DIR) -> Dict[str, Union[Interactions, pd.DataFrame]]:
     # dir and files constants
-    kion_dir = os.path.join(DATA_DIR, "data_original")
+    kion_dir = os.path.join(data_dir, "data_original")
     intersections_data = os.path.join(kion_dir, "interactions.csv")
     users_data = os.path.join(kion_dir, "users.csv")
     items_data = os.path.join(kion_dir, "items.csv")
+    zip_file = os.path.join(data_dir, "kion.zip")
     # download dataset if it is not loaded
     if not os.path.isdir(kion_dir):
         url = "https://github.com/irsafilo/KION_DATASET/raw/f69775be31fa5779907cf0a92ddedb70037fb5ae/data_original.zip"
 
         req = requests.get(url, stream=True, timeout=100)
-        ZIP_FILE = os.path.join(DATA_DIR, "kion.zip")
-        with open(ZIP_FILE, "wb") as fd:
+        with open(zip_file, "wb") as fd:
             total_size_in_bytes = int(req.headers.get("Content-Length", 0))
             progress_bar = tqdm(desc="kion dataset download", total=total_size_in_bytes, unit="iB", unit_scale=True)
             for chunk in req.iter_content(chunk_size=2**20):
                 progress_bar.update(len(chunk))
                 fd.write(chunk)
 
-        with zf.ZipFile(ZIP_FILE, "r") as files:
-            files.extractall(DATA_DIR)
-        os.remove(ZIP_FILE)
-
-    interactions = Interactions(
-        pd.read_csv(intersections_data, parse_dates=["last_watch_dt"]).rename(
-            columns={"last_watch_dt": Columns.Datetime, "total_dur": Columns.Weight}
-        )
+        with zf.ZipFile(zip_file, "r") as files:
+            files.extractall(data_dir)
+        os.remove(zip_file)
+    interactions_df = pd.read_csv(intersections_data, parse_dates=["last_watch_dt"]).rename(
+        columns={"last_watch_dt": Columns.Datetime, "total_dur": Columns.Weight}
     )
+    if fast_check < 1:
+        interactions = Interactions(interactions_df.sample(frac=fast_check))
+    else:
+        interactions = Interactions(interactions_df)
     # also read users and items
     users = pd.read_csv(users_data)
     items = pd.read_csv(items_data)
@@ -86,12 +94,13 @@ def group_by_and_beautify(results: List[Dict], custom_order: List, style: bool =
 
 
 def calculate_metrics(
-    models: Dict[str, ModelBase],
+    models: Dict[str, Union[ModelBase, UserKnn]],
     dataset: Dict[str, Union[Interactions, pd.DataFrame]],
     metrics: Dict,
     cv: Splitter,
     k_recos: int,
     style: bool = False,
+    verbose: int = 0,
 ) -> pd.DataFrame:
     """
     Reference notebook:
@@ -110,36 +119,35 @@ def calculate_metrics(
     interactions = dataset["interactions"]
 
     results = []
+    cv_iterator = cv.split(interactions, collect_fold_stats=True)
+    cv_total = cv.n_splits
 
-    for train_ids, test_ids, fold_info in tqdm(cv.split(interactions, collect_fold_stats=True), total=cv.n_splits):
-        df_train = interactions.df.iloc[train_ids]
-        dataset = Dataset.construct(df_train)
+    for train_ids, test_ids, fold_info in tqdm(cv_iterator, total=cv_total):
+        df_train = interactions.df.iloc[train_ids].copy()
+        dataset_train = Dataset.construct(df_train)
 
-        df_test = interactions.df.iloc[test_ids][Columns.UserItem]
+        df_test = interactions.df.iloc[test_ids][Columns.UserItem].copy()
         test_users = np.unique(df_test[Columns.User])
 
         catalog = df_train[Columns.Item].unique()
 
         for model_name, model in models.items():
             cur_model = deepcopy(model)
-            print(
+            print_verbose(
                 f"======================================================="
                 f"|| Model: {model_name} | Fold: {fold_info['i_split']}"
-                f"======================================================="
+                f"=======================================================",
+                verbose=verbose,
             )
 
             last_time = time()
-            cur_model.fit(dataset)
-            print(f"Fit time: {round(time() - last_time, 2)} sec.")
+            cur_model.fit(dataset_train)
+            print_verbose(f"Fit time: {round(time() - last_time, 2)} sec.", verbose=verbose)
 
             last_time = time()
-            recos = cur_model.recommend(
-                users=test_users,
-                dataset=dataset,
-                k=k_recos,
-                filter_viewed=True,
-            )
-            print(f"Recommend time: {round(time() - last_time, 2)} sec.")
+
+            recos = cur_model.recommend(users=test_users, dataset=dataset_train, k=k_recos, filter_viewed=False)
+            print_verbose(f"Recommend time: {round(time() - last_time, 2)} sec.", verbose=verbose)
 
             last_time = time()
             metric_values = calc_metrics(
@@ -149,7 +157,7 @@ def calculate_metrics(
                 prev_interactions=df_train,
                 catalog=catalog,
             )
-            print(f"Metrics time: {round(time() - last_time, 2)} sec.")
+            print_verbose(f"Metrics time: {round(time() - last_time, 2)} sec.", verbose=verbose)
 
             res = {"fold": fold_info["i_split"], "model": model_name}
             res.update(metric_values)
@@ -171,6 +179,7 @@ def visualize(
     items = dataset["items"]
 
     dataset_for_train = Dataset.construct(interactions.df)
+
     recos = model.recommend(
         users=user_list,
         dataset=dataset_for_train,
@@ -204,4 +213,6 @@ def visualize(
             .head(k_display)
         )
         print(REPORT_PART[1].format(**report_dict))
-        display(pd.merge(cur_user_recos, items_counter, on="item_id").drop(["user_id"], axis=1).head(k_display))
+        display(
+            pd.merge(cur_user_recos, items_counter, on="item_id", how="left").drop(["user_id"], axis=1).head(k_display)
+        )
