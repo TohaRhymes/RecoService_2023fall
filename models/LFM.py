@@ -17,7 +17,10 @@ DATA_DIR = os.getenv("DATA_DIR")
 class LFM(pickle.Unpickler):
     def __init__(self):
         # load data and watched by users
-        kion_data = read_kion_dataset(fast_check=1, data_dir=DATA_DIR)
+        if os.path.exists(os.path.join(DATA_DIR, "kion.zip")):
+            kion_data = read_kion_dataset(fast_check=1, data_dir=DATA_DIR)
+        else:
+            kion_data = None
         interactions = kion_data["interactions"]
         data_for_predict = Dataset.construct(interactions.df)
         self.watched = dict(interactions.df[["user_id", "item_id"]].groupby("user_id")["item_id"].agg(list))
