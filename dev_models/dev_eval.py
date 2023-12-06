@@ -1,7 +1,7 @@
 import os
+import time
 import zipfile as zf
 from copy import deepcopy
-from time import time
 from typing import Callable, Dict, List, Union
 
 import numpy as np
@@ -47,8 +47,8 @@ def read_kion_dataset(fast_check: float = 1, data_dir: str = DATA_DIR) -> Dict[s
     # download dataset if it is not loaded
     if not os.path.isdir(kion_dir):
         url = "https://github.com/irsafilo/KION_DATASET/raw/f69775be31fa5779907cf0a92ddedb70037fb5ae/data_original.zip"
-
-        req = requests.get(url, stream=True, timeout=100)
+        req = requests.get(url, stream=True, timeout=10000)
+        time.sleep(3)
         with open(zip_file, "wb") as fd:
             total_size_in_bytes = int(req.headers.get("Content-Length", 0))
             progress_bar = tqdm(desc="kion dataset download", total=total_size_in_bytes, unit="iB", unit_scale=True)
@@ -58,7 +58,7 @@ def read_kion_dataset(fast_check: float = 1, data_dir: str = DATA_DIR) -> Dict[s
 
         with zf.ZipFile(zip_file, "r") as files:
             files.extractall(data_dir)
-        os.remove(zip_file)
+        # os.remove(zip_file)
     interactions_df = pd.read_csv(intersections_data, parse_dates=["last_watch_dt"]).rename(
         columns={"last_watch_dt": Columns.Datetime, "total_dur": Columns.Weight}
     )
@@ -140,16 +140,16 @@ def calculate_metrics(
                 verbose=verbose,
             )
 
-            last_time = time()
+            last_time = time.time()
             cur_model.fit(dataset_train)
-            print_verbose(f"Fit time: {round(time() - last_time, 2)} sec.", verbose=verbose)
+            print_verbose(f"Fit time: {round(time.time() - last_time, 2)} sec.", verbose=verbose)
 
-            last_time = time()
+            last_time = time.time()
 
             recos = cur_model.recommend(users=test_users, dataset=dataset_train, k=k_recos, filter_viewed=False)
-            print_verbose(f"Recommend time: {round(time() - last_time, 2)} sec.", verbose=verbose)
+            print_verbose(f"Recommend time: {round(time.time() - last_time, 2)} sec.", verbose=verbose)
 
-            last_time = time()
+            last_time = time.time()
             metric_values = calc_metrics(
                 metrics,
                 reco=recos,
@@ -157,7 +157,7 @@ def calculate_metrics(
                 prev_interactions=df_train,
                 catalog=catalog,
             )
-            print_verbose(f"Metrics time: {round(time() - last_time, 2)} sec.", verbose=verbose)
+            print_verbose(f"Metrics time: {round(time.time() - last_time, 2)} sec.", verbose=verbose)
 
             res = {"fold": fold_info["i_split"], "model": model_name}
             res.update(metric_values)
