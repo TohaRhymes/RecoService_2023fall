@@ -47,8 +47,7 @@ def read_kion_dataset(fast_check: float = 1, data_dir: str = DATA_DIR) -> Dict[s
     # download dataset if it is not loaded
     if not os.path.isdir(kion_dir):
         url = "https://github.com/irsafilo/KION_DATASET/raw/f69775be31fa5779907cf0a92ddedb70037fb5ae/data_original.zip"
-
-        req = requests.get(url, stream=True, timeout=100)
+        req = requests.get(url, stream=True, timeout=10000)
         with open(zip_file, "wb") as fd:
             total_size_in_bytes = int(req.headers.get("Content-Length", 0))
             progress_bar = tqdm(desc="kion dataset download", total=total_size_in_bytes, unit="iB", unit_scale=True)
