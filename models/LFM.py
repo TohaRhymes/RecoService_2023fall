@@ -17,43 +17,46 @@ DATA_DIR = os.getenv("DATA_DIR")
 class LFM(pickle.Unpickler):
     def __init__(self):
         # load data and watched by users
-        if os.path.exists(os.path.join(DATA_DIR, "kion.zip")):
+        if (
+            os.path.exists(os.path.join(DATA_DIR, "kion.zip"))
+            and os.path.exists(POPULAR_NAME)
+            and os.path.exists(LFM_NAME)
+        ):
             kion_data = read_kion_dataset(fast_check=1, data_dir=DATA_DIR)
-        else:
-            kion_data = None
-        interactions = kion_data["interactions"]
-        data_for_predict = Dataset.construct(interactions.df)
-        self.watched = dict(interactions.df[["user_id", "item_id"]].groupby("user_id")["item_id"].agg(list))
+            interactions = kion_data["interactions"]
+            data_for_predict = Dataset.construct(interactions.df)
+            self.watched = dict(interactions.df[["user_id", "item_id"]].groupby("user_id")["item_id"].agg(list))
 
-        # save max number of films
-        max_k = len(kion_data["items"]["item_id"].unique())
+            # save max number of films
+            max_k = len(kion_data["items"]["item_id"].unique())
 
-        # == extract popular ===
-        # Load the popular model
-        if os.path.exists(POPULAR_NAME):
+            # == extract popular ===
+            # Load the popular model
+
             with open(POPULAR_NAME, "rb") as file:
                 self.loaded_popular = CustomUnpickler(file).load()
-        else:
-            self.loaded_popular = None
 
-        # get popular list (all items, but ranked)
-        sample_popular_user = data_for_predict.user_id_map.external_ids[0]
-        self.popular_list = list(
-            self.loaded_popular.recommend(
-                dataset=data_for_predict,
-                users=[
-                    sample_popular_user,
-                ],
-                k=max_k,
-                filter_viewed=False,
-            )["item_id"]
-        )
+            # get popular list (all items, but ranked)
+            sample_popular_user = data_for_predict.user_id_map.external_ids[0]
+            self.popular_list = list(
+                self.loaded_popular.recommend(
+                    dataset=data_for_predict,
+                    users=[
+                        sample_popular_user,
+                    ],
+                    k=max_k,
+                    filter_viewed=False,
+                )["item_id"]
+            )
 
-        # == load the real LFM model ===
-        if os.path.exists(LFM_NAME):
+            # == load the real LFM model ===
             with open(LFM_NAME, "rb") as file:
                 self.loaded_lfm = CustomUnpickler(file).load()
+
         else:
+            self.watched = None
+            self.loaded_popular = None
+            self.popular_list = None
             self.loaded_lfm = None
 
     def predict(self, user_id: int, k: int = 10) -> List[int]:
