@@ -2385,22 +2385,6 @@ files = [
 ]
 
 [[package]]
-name = "lightfm"
-version = "1.17"
-description = "LightFM recommendation model"
-optional = false
-python-versions = "*"
-files = [
-    {file = "lightfm-1.17.tar.gz", hash = "sha256:2b77ada182ccd768a8d7643ab3cfcd8b6e855db09087f7cc7329bd63316697a8"},
-]
-
-[package.dependencies]
-numpy = "*"
-requests = "*"
-scikit-learn = "*"
-scipy = ">=0.17.0"
-
-[[package]]
 name = "lightgbm"
 version = "4.1.0"
 description = "LightGBM Python Package"
@@ -6204,4 +6188,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<3.11"
-content-hash = "f8a1b3f05c169730772ab776ef7ca63a2761fd5fe7f0010bd7e75a5549acd938"
+content-hash = "173738588cb892612ecda578d809a4981f4d3668a3b1aa9ded98a74c09617cc0"
