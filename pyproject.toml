@@ -36,6 +36,9 @@ recbole = "^1.2.0"
 ray = "^2.8.1"
 pyarrow = "^14.0.1"
 kmeans-pytorch = "^0.3"
+lightfm = "^1.17"
+lightgbm = "^4.1.0"
+shap = "^0.44.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
