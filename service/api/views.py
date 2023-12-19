@@ -123,7 +123,9 @@ async def get_reco(
         raise UserNotFoundError(error_message=f"User {user_id} not found")
 
     k_recs = request.app.state.k_recs
-    if model_name == "userknn_cos_70":
+    if model_name == "range":
+        reco = list(range(1, k_recs + 1))
+    elif model_name == "userknn_cos_70":
         reco = userknn_cos_70.predict(user_id, k=k_recs)
     elif model_name == "lfm_best":
         reco = lfm_best.predict(user_id, k=k_recs)
