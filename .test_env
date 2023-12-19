@@ -1,5 +1,9 @@
 MY_SECRET_TOKEN=let_admin_in_lmao
 USERKNNCOS70_NAME=./models/pickle_data/user_cos_70.pickle
+DSSM_NAME=./models/pickle_data/dssm.pickle
+AE_NAME=./models/pickle_data/ae.pickle
+RECBOLE_NAME=./models/pickle_data/recbole.pickle
 LFM_NAME=./models/pickle_data/ann_lfm.pickle
 POPULAR_NAME=./models/pickle_data/popular.pickle
+RANKER_NAME=./models/pickle_data/ranker_model.pickle
 DATA_DIR=./data

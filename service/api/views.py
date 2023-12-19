@@ -1,11 +1,14 @@
-import random
 from typing import List
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from gunicorn.config import User
 from pydantic import BaseModel
 
+from models.AE import AEModelProd
+from models.DSSM import DSSMModelProd
 from models.LFM import LFM
+from models.Ranker import RankerModelProd
+from models.RecboleProd import RecboleProd
 from models.UserKnnCos70 import UserKnnCos70
 from service.api.exceptions import UserNotFoundError
 from service.api.security import verify_token
@@ -19,6 +22,10 @@ class RecoResponse(BaseModel):
 
 userknn_cos_70 = UserKnnCos70()
 lfm_best = LFM()
+dssm_prod = DSSMModelProd()
+ae_prod = AEModelProd()
+recbole_prod = RecboleProd()
+ranker = RankerModelProd()
 
 router = APIRouter()
 
@@ -116,14 +123,20 @@ async def get_reco(
         raise UserNotFoundError(error_message=f"User {user_id} not found")
 
     k_recs = request.app.state.k_recs
-    if model_name == "random":
-        reco = random.sample(range(1, k_recs * 5), k_recs)
-    elif model_name == "range":
+    if model_name == "range":
         reco = list(range(1, k_recs + 1))
     elif model_name == "userknn_cos_70":
         reco = userknn_cos_70.predict(user_id, k=k_recs)
     elif model_name == "lfm_best":
         reco = lfm_best.predict(user_id, k=k_recs)
+    elif model_name == "dssm":
+        reco = dssm_prod.predict(user_id, k=k_recs)
+    elif model_name == "ae":
+        reco = ae_prod.predict(user_id, k=k_recs)
+    elif model_name == "recbole":
+        reco = recbole_prod.predict(user_id, k=k_recs)
+    elif model_name == "ranker_lfm_pop":
+        reco = ranker.predict(user_id, k=k_recs)
     else:
         raise HTTPException(status_code=404, detail="Model doesn't exist")
 

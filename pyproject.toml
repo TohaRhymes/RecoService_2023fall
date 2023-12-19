@@ -31,6 +31,13 @@ black = "^23.11.0"
 pip = "^23.3.1"
 setuptools = "^69.0.2"
 wheel = "^0.42.0"
+tensorflow = "2.12.0"
+recbole = "^1.2.0"
+ray = "^2.8.1"
+pyarrow = "^14.0.1"
+kmeans-pytorch = "^0.3"
+lightgbm = "^4.1.0"
+shap = "^0.44.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
@@ -39,7 +46,7 @@ mypy = "^1.6.1"
 isort = "^5.12.0"
 bandit = "^1.7.5"
 flake8 = "^6.1.0"
-pylint = "^3.0.2"
+pylint = "^2.6.0"
 black = "^23.10.1"
 
 [tool.black]
